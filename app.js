@@ -1,11 +1,15 @@
 const express= require('express')
 const bodyparser= require('body-parser')
+const cors= require('cors')
 const path= require('path')
 const app =express()
+app.use(cors())
 const userRoute= require('./routes/userRoute')
 const sequelize = require('./utils/database')
+const db=require('./model/expense.js')
 app.use(bodyparser.urlencoded({extended:true}))
 app.use(express.static(path.join(__dirname, 'public','views')))
+app.use(express.static(path.join(__dirname, 'public','style')))
 app.use(userRoute)
 sequelize.sync().then(()=>{
     app.listen(3000,()=>{

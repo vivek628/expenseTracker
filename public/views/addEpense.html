@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="addexpense.css">
+</head>
+<body>
+   
+    <div class="container1">
+        <h1>Expense Tracker</h1>
+        <form id="expenseForm" action="/addexpense" method="POST">
+            <label for="amount">Amount Spent ($):</label>
+            <input type="number" id="amount" name="amount" required>
+            
+            <label for="description">Description:</label>
+            <input type="text" id="description" name="description" required>
+            
+            <label for="category">Category:</label>
+            <select id="category" name="category" required>
+                <option value="">Select a category...</option>
+                <option value="Food">Food</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Salary">Salary</option>
+                <!-- Add more options as needed -->
+            </select>
+            
+            <button type="submit" >Add Expense</button>
+            
+        </form>
+        <button onclick="getData()" id="actionbtn">getdata</button>
+        </div>
+       
+      
+        <div class="container" id="expenseTable" style=" display:none">
+           
+           
+            <table >
+                <thead>
+                    <tr>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="expenseTableBody">
+                    <!-- Table rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    
+
+<script>
+
+function getData() {
+    fetch('http://localhost:3000/getdata')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Received data:", data);
+
+            // Clear previous table data, if any
+            const tableBody = document.getElementById('expenseTableBody');
+            tableBody.innerHTML = '';
+
+            // Iterate over each item in the data array and add rows to the table
+            data.forEach(item => {
+                const row = document.createElement('tr');
+
+                // Create cells for each property of the item
+                const amountCell = document.createElement('td');
+                amountCell.textContent = `$${item.Amount}`;
+                row.appendChild(amountCell);
+
+                const descriptionCell = document.createElement('td');
+                descriptionCell.textContent = item.Description;
+                row.appendChild(descriptionCell);
+
+                const categoryCell = document.createElement('td');
+                categoryCell.textContent = item.Category;
+                row.appendChild(categoryCell);
+                const action=document.createElement('td')
+                btn=document.createElement('button')
+                btn.textContent="DELETE"
+               action.appendChild(btn) 
+                row.appendChild(action)
+
+                // Append the row to the table body
+                tableBody.appendChild(row);
+            });
+
+            // Show the table
+           const show= document.getElementById('actionbtn')
+           if(show.innerText==='getdata')
+           {
+            document.getElementById('expenseTable').style.display = 'block';
+            show.innerText="hidedata"
+
+           }
+           else{
+            document.getElementById('expenseTable').style.display = 'none';
+            show.innerText="getdata"
+
+           }
+
+            
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            // Display an error message to the user or handle it appropriately
+        });
+}
+
+
+</script>
+</body>
+</html>
