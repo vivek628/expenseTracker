@@ -1,6 +1,7 @@
 const express=require('express')
 const bcrypt = require('bcryptjs');
 const User= require('../model/user')
+const expenses=require('../model/expense')
 const path=require('path')
 const { where } = require('sequelize')
 exports.signup = async (req, res, next) => {
@@ -45,7 +46,7 @@ exports.login=async (req,res,next)=>{
                          bcrypt.compare(password,data[0].password,(err,result)=>{
                             if(result==true)
                             {
-                                res.send('Login successful');
+                                res.sendFile(path.join(__dirname, '../public/views/', 'addepense.html'));
                             }
                             else{
                                 res.status(404).send('password is wrong')
@@ -60,4 +61,30 @@ console.log(e)
 }
     
   
+}
+exports.addexpense=async(req,res,next)=>
+{
+    try{
+          console.log(req.body)
+          const amount=req.body.amount
+          const description=req.body.description
+          const category= req.body.category
+        await expenses.create({Amount:amount,Description:description,Category:category})
+     
+        res.sendFile(path.join(__dirname, '../public/views/', 'addepense.html'));
+
+    }
+    catch(e){
+        console.log(e)
+    }
+}
+exports.getData = async (req, res, next) => {
+    try {
+        const data = await expenses.findAll();
+        console.log(data)
+       res.json(data);  // Send JSON response back to the client
+    } catch (e) {
+        console.log(e);
+     res.status(500).json({ error: 'Internal Server Error' });  // Handle errors
+    }
 }
