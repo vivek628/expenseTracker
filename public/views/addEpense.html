@@ -23,10 +23,10 @@
                 <option value="Food">Food</option>
                 <option value="Petrol">Petrol</option>
                 <option value="Salary">Salary</option>
-                <!-- Add more options as needed -->
+                
             </select>
             
-            <button type="submit" >Add Expense</button>
+            <button onclick="addexpense()" >Add Expense</button>
             
         </form>
         <button onclick="getData()" id="actionbtn">getdata</button>
@@ -46,16 +46,54 @@
                     </tr>
                 </thead>
                 <tbody id="expenseTableBody">
-                    <!-- Table rows will be dynamically added here -->
+                 
                 </tbody>
             </table>
         </div>
     
 
 <script>
+function addexpense() {
+   
+    event.preventDefault();
+
+    const form = document.getElementById('expenseForm');
+
+   
+    const formData = new FormData(form);
+
+   
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+
+   
+    const ID=localStorage.getItem('token')
+    fetch('/postaddexpense', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json', 
+            authorization:ID
+            
+        },
+        body: JSON.stringify(data) 
+    }).then(()=>{
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 function getData() {
-    fetch('http://localhost:3000/getdata')
+    const ID=localStorage.getItem('token')
+    
+    fetch('http://localhost:3000/getdata',{
+        headers:{
+            authorization:ID
+        }
+    })
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -65,15 +103,14 @@ function getData() {
         .then(data => {
             console.log("Received data:", data);
 
-            // Clear previous table data, if any
             const tableBody = document.getElementById('expenseTableBody');
             tableBody.innerHTML = '';
 
-            // Iterate over each item in the data array and add rows to the table
+            
             data.forEach(item => {
                 const row = document.createElement('tr');
 
-                // Create cells for each property of the item
+            
                 const amountCell = document.createElement('td');
                 amountCell.textContent = `$${item.Amount}`;
                 row.appendChild(amountCell);
@@ -88,7 +125,9 @@ function getData() {
                 const action=document.createElement('td')
                 btn=document.createElement('button')
                 btn.textContent="DELETE"
-               action.appendChild(btn) 
+                btn.id='deletebtn'
+               
+                action.appendChild(btn) 
                 row.appendChild(action)
 
                 // Append the row to the table body

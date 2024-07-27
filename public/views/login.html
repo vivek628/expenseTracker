@@ -54,16 +54,61 @@
     </style>
 </head>
 <body>
-    
-    <form action="/login" method="POST">
+    <form id="loginForm">
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required>
 
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
+
         <input type="submit" value="Login">
-        <span>Do not have account?<a href="/">Signup</a></span>
+        <span>Do not have account? <a href="/">Signup</a></span>
     </form>
+
    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        const form = document.getElementById('loginForm');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            axios.post('/postLogin', {
+                email: email,
+                password: password
+            })
+            .then(function (response) {
+                console.log('Login successful');
+                
+                
+                const token=response.data.token
+                localStorage.setItem('token',token)
+               
+            
+            }).then(()=>{
+                console.log("ji")
+                const token=localStorage.getItem('token')
+                console.log(token)
+                window.location.href = `http://localhost:3000/getaddexpense?token=${token}`;
+
+    })
+})
+.then(function (response) {
+    console.log('GET request successful:');
+   
+})
+.catch(function (error) {
+    console.error('Error:', error);
+    
+});
+
+          
+    </script>
 </body>
+
+
 </html>

@@ -1,11 +1,15 @@
 const express= require('express')
 const route= express.Router()
 const userController=require('../controller/userControllers')
+const auth=require('../middleware/auth')
 
-route.post('/addexpense',userController.addexpense)
-route.use('/login',userController.login)
+route.get('/getaddexpense',auth.auth,userController.getaddexpense)
+route.post('/postaddexpense',userController.postaddexpense)
+route.post('/postLogin',userController.postLogin)
+route.get('/getLogin',userController.getLogin)
 route.get('/getdata',userController.getData)
 route.use('/',userController.signup)
+
 
 
 
