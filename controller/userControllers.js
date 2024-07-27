@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const User= require('../model/user')
 const expenses=require('../model/expense')
 const path=require('path')
+const jwt = require('jsonwebtoken');
+const secretKey = 'your_secret_key'
 const { where } = require('sequelize')
 exports.signup = async (req, res, next) => {
     const Method = req.method;
@@ -24,54 +26,62 @@ exports.signup = async (req, res, next) => {
           
         }
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Erruor:", error);
         res.status(500).send("Internal Server Error"); 
     }
 };
-exports.login=async (req,res,next)=>{
-    try{
-        if(req.method=='GET')
-            {
-                res.sendFile(path.join(__dirname,'../public/views/','login.html'))
+exports.getLogin = (req, res, next) => {
+    res.sendFile(path.join(__dirname, '../public/views/', 'login.html'));
+};
+exports.postLogin = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        console.log(email, password); 
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        // Find user by email
+        const user = await User.findOne({ where: { email: email } });
+
+        if (!user) {
+            return res.status(401).json({ error: 'Email does not exist' });
+        }
+
+        // Compare password
+        bcrypt.compare(password, user.password, (err, result) => {
+            if (err) {
+                return res.status(500).json({ error: 'Internal server error' });
             }
-            else{
-                const email= req.body.email;
-                const password=req.body.password;
-                User.findAll({where:{email:email}}).then((data)=>{
-                    if(data.length==0)
-                    {
-                        res.status(401).send('user doest not authorise')
-                    }
-                    else{
-                         bcrypt.compare(password,data[0].password,(err,result)=>{
-                            if(result==true)
-                            {
-                                res.sendFile(path.join(__dirname, '../public/views/', 'addepense.html'));
-                            }
-                            else{
-                                res.status(404).send('password is wrong')
-                            }
-                        })
-                    }
-                })
+            if (result) {
+                // Passwords match, generate access token
+                const accessToken = generateaccesToken(user.id);
+                return res.status(200).json({ token: accessToken });
+            } else {
+                // Passwords do not match
+                return res.status(401).json({ error: 'Password is incorrect' });
+            }
+        });
+    } catch (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({ error: 'Internal server error' });
     }
-}catch(e)
-{
-console.log(e)
-}
+};
     
-  
-}
-exports.addexpense=async(req,res,next)=>
-{
+        
+
+exports.postaddexpense=async(req,res,next)=>
+{    
     try{
           console.log(req.body)
+          const authorizationHeader = req.headers['authorization'];
+          const id= await getidfromjwt(authorizationHeader)
           const amount=req.body.amount
           const description=req.body.description
           const category= req.body.category
-        await expenses.create({Amount:amount,Description:description,Category:category})
+          await expenses.create({Amount:amount,Description:description,Category:category,UserId:id})
      
-        res.sendFile(path.join(__dirname, '../public/views/', 'addepense.html'));
+          res.sendFile(path.join(__dirname, '../public/views/', 'login.html'));
 
     }
     catch(e){
@@ -80,11 +90,32 @@ exports.addexpense=async(req,res,next)=>
 }
 exports.getData = async (req, res, next) => {
     try {
-        const data = await expenses.findAll();
+        const authorizationHeader = req.headers['authorization'];
+        console.log("id",authorizationHeader)
+       const id= await getidfromjwt(authorizationHeader)
+       console.log(id)
+
+        const data = await expenses.findAll({where:{UserId:id}});
         console.log(data)
-       res.json(data);  // Send JSON response back to the client
+        res.json(data); 
     } catch (e) {
         console.log(e);
-     res.status(500).json({ error: 'Internal Server Error' });  // Handle errors
+       res.status(500).json({ error: 'Internal Server Error' });  
     }
+}
+function generateaccesToken(id)
+{
+    return jwt.sign({userId:id},secretKey)
+}
+function getidfromjwt(id)
+
+{   
+    const secretKey = 'your_secret_key'
+    const userid= (jwt.verify(id,secretKey))
+    return userid.userId
+}
+exports.getaddexpense=(req,res,next)=>{
+    console.log("ji2")
+    console.log(req.user)
+    res.sendFile(path.join(__dirname, '../public/views/', 'addEpense.html'));
 }
