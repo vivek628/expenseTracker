@@ -10,12 +10,18 @@ const sequelize = require('./utils/database')
 const db=require('./model/expense.js')
 const User=require('./model/user.js')
 const Expenses= require('./model/expense.js')
+const Order= require('./model/order.js')
+const purhcaseroute= require('./routes/purchaseRoute.js')
 app.use(bodyparser.urlencoded({extended:true}))
 app.use(express.static(path.join(__dirname, 'public','views')))
 app.use(express.static(path.join(__dirname, 'public','style')))
 User.hasMany(Expenses)
 Expenses.belongsTo(User)
+User.hasMany(Order)
+Order.belongsTo(User)
+app.use(purhcaseroute)
 app.use(userRoute)
+
 sequelize.sync().then(()=>{
     app.listen(3000,()=>{
         console.log("server is running")

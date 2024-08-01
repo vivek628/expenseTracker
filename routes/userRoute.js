@@ -8,6 +8,7 @@ route.post('/postaddexpense',userController.postaddexpense)
 route.post('/postLogin',userController.postLogin)
 route.get('/getLogin',userController.getLogin)
 route.get('/getdata',userController.getData)
+route.get('/getuser',userController.getUser)
 route.use('/',userController.signup)
 
 
