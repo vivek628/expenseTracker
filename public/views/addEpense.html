@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Tracker</title>
     <link rel="stylesheet" href="addexpense.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
 </head>
 <body>
    
     <div class="container1">
         <h1>Expense Tracker</h1>
+        <h1 id="primeuserhead" style="color: red; display: none;" >PRIME USER</h1>
         <form id="expenseForm" action="/addexpense" method="POST">
             <label for="amount">Amount Spent ($):</label>
             <input type="number" id="amount" name="amount" required>
@@ -29,7 +35,9 @@
             <button onclick="addexpense()" >Add Expense</button>
             
         </form>
+        <button class="prime" id="primebtn"> BUY PRIME MEMBERSHIP</button>
         <button onclick="getData()" id="actionbtn">getdata</button>
+        
         </div>
        
       
@@ -53,6 +61,37 @@
     
 
 <script>
+    window.onload = function() {
+        const ID=localStorage.getItem('token')
+
+        console.log("load")
+
+    
+    fetch('http://localhost:3000/getuser',{
+        headers:{
+            authorization:ID
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        }).then((item=>{
+            console.log(item)
+            if(item.isPrimeuser==true)
+        {
+            console.log("in")
+            document.getElementById("primeuserhead").style.display='block'
+           document.getElementById('primebtn').style.display='none'
+        }
+
+             
+
+        }))
+       
+    
+};
 function addexpense() {
    
     event.preventDefault();
@@ -82,10 +121,9 @@ function addexpense() {
         window.location.reload();
     })
     .catch(error => {
-        console.error('Error:', error);
+    console.log(error);
     });
 }
-
 function getData() {
     const ID=localStorage.getItem('token')
     
@@ -155,6 +193,77 @@ function getData() {
             // Display an error message to the user or handle it appropriately
         });
 }
+
+document.querySelector('.prime').onclick = async (e) => {
+    e.preventDefault();
+
+    // Fetch the token from localStorage
+    const token = localStorage.getItem('token');
+    console.log('Token:', token);
+
+    // Make an asynchronous request to get premium details
+    const response = await fetch("http://localhost:3000/premium", {
+        headers: {
+            'Authorization': token
+        }
+    });
+
+    // Check if the response is OK
+    if (!response.ok) {
+        alert('Failed to fetch premium details');
+        return;
+    }
+
+    // Parse the JSON response
+    const data = await response.json();
+    console.log('Data:', data);
+    console.log("id:", data.key_id);
+    console.log("order:", data.order.id);
+
+    // Define Razorpay options
+    var options = {
+        "key": data.key_id,
+        "order_id": data.order.id,
+        "handler": async function (response) {
+            console.log('Payment response:', response); // Debug statement
+            try {
+                console.log("hi")
+                await axios.post("http://localhost:3000/verify_payment", {
+                    order_id: options.order_id,
+                    payment_id: response.razorpay_payment_id
+                }, {
+                    headers: {
+                        "Authorization": token
+                    }
+                });
+                alert("done")
+                console.log("what is this yar")
+
+            } catch (e) {
+                console.error('Payment verification error:', e); // Debug statement
+                alert("Something went wrong");
+            }
+        },
+        "modal": {
+            "ondismiss": function() {
+                console.log('Payment modal dismissed'); // Debug statement
+            }
+        }
+    };
+
+    // Initialize and open Razorpay
+    const rzp1 = new Razorpay(options);
+    
+     await rzp1.open();
+     e.preventDefault()
+  //  window.location.reload()
+
+    // Handle payment failure
+    rzp1.on('payment.failed', function (response) {
+        console.log('Payment failed response:', response); // Debug statement
+        alert('Payment failed. Please try again.');
+    });
+};
 
 
 </script>

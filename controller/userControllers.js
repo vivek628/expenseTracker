@@ -58,7 +58,7 @@ exports.postLogin = async (req, res, next) => {
                 const accessToken = generateaccesToken(user.id);
                 return res.status(200).json({ token: accessToken });
             } else {
-                // Passwords do not match
+               
                 return res.status(401).json({ error: 'Password is incorrect' });
             }
         });
@@ -101,6 +101,20 @@ exports.getData = async (req, res, next) => {
     } catch (e) {
         console.log(e);
        res.status(500).json({ error: 'Internal Server Error' });  
+    }
+}
+exports.getUser=async(req,res,next)=>{
+    try{
+        const authorizationHeader = req.headers['authorization'];
+       // console.log("id",authorizationHeader)
+       const id= await getidfromjwt(authorizationHeader)
+       //console.log(id)
+       const data= await User.findOne({where:{id:id}})
+       //Console.log(json)
+       res.json(data)
+    }
+    catch(E){
+        console.log(E)
     }
 }
 function generateaccesToken(id)
