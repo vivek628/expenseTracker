@@ -7,7 +7,7 @@ exports.auth=async(req,res,next)=>{
         let token= req.query.token
         console.log(token)
        const userid= (jwt.verify(token,secretKey))
-       User.findByPk(userid.userId).then(user=>{
+        User.findByPk(userid.userId).then(user=>{
         req.user= user
         next()
        })
