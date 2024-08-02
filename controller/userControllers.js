@@ -1,11 +1,14 @@
 const express=require('express')
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs')
+
+const Sequelize=require('sequelize');
 const User= require('../model/user')
 const expenses=require('../model/expense')
 const path=require('path')
 const jwt = require('jsonwebtoken');
 const secretKey = 'your_secret_key'
-const { where } = require('sequelize')
+const { where } = require('sequelize');
+const { group } = require('console');
 exports.signup = async (req, res, next) => {
     const Method = req.method;
     
@@ -80,17 +83,22 @@ exports.postaddexpense=async(req,res,next)=>
           const description=req.body.description
           const category= req.body.category
           await expenses.create({Amount:amount,Description:description,Category:category,UserId:id})
-           User.findOne({where:{id:id}}).then((data)=>{
-            return data.totalexpense
-          }).then((money)=>
-        {
-            const totalmoney=money + +amount
-         User.update({totalexpense:totalmoney},
-            {where:{id:id}}
-         )
-        })
           
-     
+           const Expenses = await expenses.findAll({
+            attributes: [
+              'userId',
+              [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalExpense']
+            ],
+            group: ['userId']
+          });
+          console.log("expense",Expenses)
+          for (const expense of Expenses) {
+            await User.update(
+              { totalexpense:expense.get('totalExpense') },
+              { where: { id: expense.get('userId') } }
+            );
+          }
+         
           res.sendFile(path.join(__dirname, '../public/views/', 'login.html'));
 
     }
@@ -144,13 +152,27 @@ exports.getaddexpense=(req,res,next)=>{
     res.sendFile(path.join(__dirname, '../public/views/', 'addEpense.html'));
 }
 exports.getleaderboard=async (req,res,next)=>{
-    const usersDescending = await User.findAll({
-        order: [['totalexpense', 'DESC']] 
-      });
+    const leaderboardexpesne=await User.findAll(
+        {
+            attributes:['id','name',[Sequelize.fn('sum',Sequelize.col('expenses.Amount')),'total_coast']],
+            include:[
+                {
+                    model:expenses,
+                    attributes:[]
+                }
+            ],
+            group:['user.id'],
+            order: [[Sequelize.col('total_coast'), 'DESC']]
+        }
+        
+    )
+   // const usersDescending = await User.findAll({
+     //   order: [['totalexpense', 'DESC']] 
+      //});
 
       
      // console.log('Users sorted by age (ascending):', usersDescending.map(user => user.toJSON()));
-
-      res.json(usersDescending)
+       console.log(leaderboardexpesne)
+      res.json(leaderboardexpesne)
 
 }
