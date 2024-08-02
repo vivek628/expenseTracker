@@ -15,7 +15,7 @@
    
     <div class="container1">
         <h1>Expense Tracker</h1>
-        <h1 id="primeuserhead" style="color: red; display: none;" >PRIME USER</h1>
+        <h1 id="primeuserhead" style="color: red; display: none;" >PREMIUM USER</h1>
         <form id="expenseForm" action="/addexpense" method="POST">
             <label for="amount">Amount Spent ($):</label>
             <input type="number" id="amount" name="amount" required>
@@ -35,7 +35,8 @@
             <button onclick="addexpense()" >Add Expense</button>
             
         </form>
-        <button class="prime" id="primebtn"> BUY PRIME MEMBERSHIP</button>
+        <button class="prime" id="primebtn"> BUY PREMIUM MEMBERSHIP</button>
+        <button class="leader" id="leader" style="display: none;">show leaderboard</button>
         <button onclick="getData()" id="actionbtn">getdata</button>
         
         </div>
@@ -54,6 +55,21 @@
                     </tr>
                 </thead>
                 <tbody id="expenseTableBody">
+                 
+                </tbody>
+            </table>
+        </div>
+        <div class="container" id="totalexpenseTable" style=" display:none">
+           
+           
+            <table >
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>totalexpense</th>
+                    </tr>
+                </thead>
+                <tbody id="totalexpense">
                  
                 </tbody>
             </table>
@@ -84,6 +100,7 @@
             console.log("in")
             document.getElementById("primeuserhead").style.display='block'
            document.getElementById('primebtn').style.display='none'
+           document.getElementById("leader").style.display='block'
         }
 
              
@@ -252,8 +269,10 @@ document.querySelector('.prime').onclick = async (e) => {
     };
 
     // Initialize and open Razorpay
+
+
     const rzp1 = new Razorpay(options);
-    
+   
      await rzp1.open();
      e.preventDefault()
   //  window.location.reload()
@@ -263,6 +282,44 @@ document.querySelector('.prime').onclick = async (e) => {
         console.log('Payment failed response:', response); // Debug statement
         alert('Payment failed. Please try again.');
     });
+};
+let isLeaderboardVisible = false;
+
+document.getElementById('leader').onclick = function() {
+   
+    isLeaderboardVisible = !isLeaderboardVisible;
+
+    if (isLeaderboardVisible) {
+       
+        axios.get("http://localhost:3000/getLeaderboard").then((response) => {
+            console.log(response);
+
+            const table = document.getElementById("totalexpense");
+            table.innerHTML = '';
+            response.data.forEach(item => {
+                const tr = document.createElement("tr");
+                table.appendChild(tr);
+
+                const td_name = document.createElement("td");
+                td_name.textContent = item.name;
+                tr.appendChild(td_name);
+
+                const td_expense = document.createElement('td');
+                td_expense.textContent = item.totalexpense;
+                tr.appendChild(td_expense);
+            });
+
+            
+            document.getElementById("leader").textContent = "Hide leaderboard";
+            document.getElementById('totalexpenseTable').style.display = 'block';
+        });
+    } else {
+       
+        document.getElementById('totalexpenseTable').style.display = 'none';
+        document.getElementById("leader").textContent = "Show leaderboard";
+    }
+
+    console.log("Button clicked");
 };
 
 

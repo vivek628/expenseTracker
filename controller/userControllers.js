@@ -80,6 +80,16 @@ exports.postaddexpense=async(req,res,next)=>
           const description=req.body.description
           const category= req.body.category
           await expenses.create({Amount:amount,Description:description,Category:category,UserId:id})
+           User.findOne({where:{id:id}}).then((data)=>{
+            return data.totalexpense
+          }).then((money)=>
+        {
+            const totalmoney=money + +amount
+         User.update({totalexpense:totalmoney},
+            {where:{id:id}}
+         )
+        })
+          
      
           res.sendFile(path.join(__dirname, '../public/views/', 'login.html'));
 
@@ -132,4 +142,15 @@ exports.getaddexpense=(req,res,next)=>{
     console.log("ji2")
     console.log(req.user)
     res.sendFile(path.join(__dirname, '../public/views/', 'addEpense.html'));
+}
+exports.getleaderboard=async (req,res,next)=>{
+    const usersDescending = await User.findAll({
+        order: [['totalexpense', 'DESC']] 
+      });
+
+      
+     // console.log('Users sorted by age (ascending):', usersDescending.map(user => user.toJSON()));
+
+      res.json(usersDescending)
+
 }
