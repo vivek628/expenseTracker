@@ -21,6 +21,11 @@ const User=sequelize.define('User',{
     isPrimeuser:
     {
         type:DataTypes.BOOLEAN
+    },
+    totalexpense:{
+
+        type:DataTypes.FLOAT,
+        defaultValue:0
     }
 })
 module.exports=User
