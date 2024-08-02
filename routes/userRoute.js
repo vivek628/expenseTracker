@@ -9,6 +9,7 @@ route.post('/postLogin',userController.postLogin)
 route.get('/getLogin',userController.getLogin)
 route.get('/getdata',userController.getData)
 route.get('/getuser',userController.getUser)
+route.get('/getLeaderboard',userController.getleaderboard)
 route.use('/',userController.signup)
 
 
