@@ -152,7 +152,7 @@ exports.getaddexpense=(req,res,next)=>{
     res.sendFile(path.join(__dirname, '../public/views/', 'addEpense.html'));
 }
 exports.getleaderboard=async (req,res,next)=>{
-    const leaderboardexpesne=await User.findAll(
+   /* const leaderboardexpesne=await User.findAll(
         {
             attributes:['id','name',[Sequelize.fn('sum',Sequelize.col('expenses.Amount')),'total_coast']],
             include:[
@@ -165,14 +165,15 @@ exports.getleaderboard=async (req,res,next)=>{
             order: [[Sequelize.col('total_coast'), 'DESC']]
         }
         
-    )
-   // const usersDescending = await User.findAll({
-     //   order: [['totalexpense', 'DESC']] 
-      //});
+    )*/
+    const usersDescending = await User.findAll({
+        attributes:['id','name','totalexpense'],
+      order: [['totalexpense', 'DESC']] 
+      });
 
       
      // console.log('Users sorted by age (ascending):', usersDescending.map(user => user.toJSON()));
-       console.log(leaderboardexpesne)
-      res.json(leaderboardexpesne)
+       //console.log(leaderboardexpesne)
+      res.json(usersDescending)
 
 }
