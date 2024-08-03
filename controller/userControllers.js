@@ -2,13 +2,14 @@ const express=require('express')
 const bcrypt = require('bcryptjs')
 
 const Sequelize=require('sequelize');
+const sequelize=require('../utils/database')
 const User= require('../model/user')
 const expenses=require('../model/expense')
 const path=require('path')
 const jwt = require('jsonwebtoken');
 const secretKey = 'your_secret_key'
 const { where } = require('sequelize');
-const { group } = require('console');
+const { group, error } = require('console');
 exports.signup = async (req, res, next) => {
     const Method = req.method;
     
@@ -72,19 +73,58 @@ exports.postLogin = async (req, res, next) => {
 };
     
         
+exports.postaddexpense = async (req, res, next) => {
+    const t = await sequelize.transaction(); 
 
-exports.postaddexpense=async(req,res,next)=>
-{    
-    try{
-          console.log(req.body)
-          const authorizationHeader = req.headers['authorization'];
-          const id= await getidfromjwt(authorizationHeader)
-          const amount=req.body.amount
-          const description=req.body.description
-          const category= req.body.category
-          await expenses.create({Amount:amount,Description:description,Category:category,UserId:id})
-          
-           const Expenses = await expenses.findAll({
+    try {
+        console.log(req.body);
+        const authorizationHeader = req.headers['authorization'];
+        const id = await getidfromjwt(authorizationHeader); 
+        const amount = req.body.amount;
+        const description = req.body.description;
+        const category = req.body.category;
+
+        
+        await expenses.create({
+            Amount: amount,
+            Description: description,
+            Category: category,
+            UserId: id
+        }, { transaction: t });
+
+       
+        const user1 = await User.findOne({ where: { id: id } });
+
+        if (!user1) {
+            throw new Error('User not found'); 
+        }
+
+        console.log("user1", user1);
+        const preamount = user1.totalexpense;
+        console.log("preamount is ", preamount);
+
+        const total_amount = Number(amount) + Number(preamount);
+
+        await User.update({ totalexpense: total_amount }, {
+            where: { id: id },
+            transaction: t 
+        });
+
+        
+        await t.commit();
+
+       
+        res.sendFile(path.join(__dirname, '../public/views/', 'login.html'));
+
+    } catch (E) {
+        
+        await t.rollback();
+        console.error(E);
+        res.status(500).json({ success: false, error: E.message });
+    }
+};
+
+/* const Expenses = await expenses.findAll({
             attributes: [
               'userId',
               [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalExpense']
@@ -97,15 +137,7 @@ exports.postaddexpense=async(req,res,next)=>
               { totalexpense:expense.get('totalExpense') },
               { where: { id: expense.get('userId') } }
             );
-          }
-         
-          res.sendFile(path.join(__dirname, '../public/views/', 'login.html'));
-
-    }
-    catch(e){
-        console.log(e)
-    }
-}
+          }*/
 exports.getData = async (req, res, next) => {
     try {
         const authorizationHeader = req.headers['authorization'];
