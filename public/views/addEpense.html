@@ -127,7 +127,7 @@ function addexpense() {
 
    
     const ID=localStorage.getItem('token')
-    fetch('/postaddexpense', {
+     fetch('/postaddexpense', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json', 
@@ -136,6 +136,7 @@ function addexpense() {
         },
         body: JSON.stringify(data) 
     }).then(()=>{
+        console.log("relod")
         window.location.reload();
     })
     .catch(error => {
