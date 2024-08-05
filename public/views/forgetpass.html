@@ -9,11 +9,19 @@
 <body>
     <div class="container">
         <h1>Forgot Password</h1>
-        <form action="/resetpassword" method="post">
+        <form action="/resetpassword" method="post" onsubmit="savemail()">
             <label for="email">Enter your email address:</label>
             <input type="email" id="email" name="email" required>
             <button type="submit">Reset Password</button>
         </form>
     </div>
 </body>
+<script>
+    function savemail()
+    {
+        let email= document.getElementById('email').value
+        localStorage.setItem('email',email)
+        console.log("email is ",email)
+    }
+</script>
 </html>
