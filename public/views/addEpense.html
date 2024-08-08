@@ -32,12 +32,15 @@
                 
             </select>
             
+            
             <button onclick="addexpense()" >Add Expense</button>
+            <button id="download">Download</button>
             
         </form>
         <button class="prime" id="primebtn"> BUY PREMIUM MEMBERSHIP</button>
         <button class="leader" id="leader" style="display: none;">show leaderboard</button>
         <button onclick="getData()" id="actionbtn">getdata</button>
+        <button id ="urllist">SHOWURLlist</button>
         
         </div>
        
@@ -54,10 +57,15 @@
                         <th>Action</th>
                     </tr>
                 </thead>
+               
                 <tbody id="expenseTableBody">
                  
                 </tbody>
             </table>
+            <button id="daily" class="my-button">TODAY EXPENSE</button>
+            <button id="week" class="my-button">WEEKLY EXPENSE</button>
+            <button id="month"class="my-button">MONTHLY EXPENSE</button>
+          
         </div>
         <div class="container" id="totalexpenseTable" style=" display:none">
            
@@ -74,9 +82,44 @@
                  
                 </tbody>
             </table>
+          
+          
         </div>
     
-
+        <div class="container" id="arrangetable" style="display: none;">
+           
+           
+            <table >
+                <h2 id="arrangeby"></h2>
+                <thead>
+                    <tr>
+                       
+                        <th>Description</th>
+                        <th>Category</th>
+                       <th>Amount</th>
+                        
+                    </tr>
+                </thead>
+                <tbody id="arrangeTableBody">
+                 
+                </tbody>
+            </table>
+        </div>
+        <div class="container" id="urls" style="display: none;">
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>URL LINK</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="listbody">
+                   
+                </tbody>
+            </table>
+        </div>
 <script>
     window.onload = function() {
         const ID=localStorage.getItem('token')
@@ -209,45 +252,45 @@ function getData() {
         })
         .catch(error => {
             console.error('Error fetching data:', error);
-            // Display an error message to the user or handle it appropriately
+           
         });
 }
 
 document.querySelector('.prime').onclick = async (e) => {
     e.preventDefault();
 
-    // Fetch the token from localStorage
+
     const token = localStorage.getItem('token');
     console.log('Token:', token);
 
-    // Make an asynchronous request to get premium details
+  
     const response = await fetch("http://localhost:3000/premium", {
         headers: {
             'Authorization': token
         }
     });
 
-    // Check if the response is OK
+    
     if (!response.ok) {
         alert('Failed to fetch premium details');
         return;
     }
 
-    // Parse the JSON response
+   
     const data = await response.json();
     console.log('Data:', data);
     console.log("id:", data.key_id);
     console.log("order:", data.order.id);
 
-    // Define Razorpay options
+
     var options = {
         "key": data.key_id,
         "order_id": data.order.id,
         "handler": async function (response) {
-            console.log('Payment response:', response); // Debug statement
+            console.log('Payment response:', response);
             try {
                 console.log("hi")
-                await axios.post("http://localhost:3000/verify_payment", {
+                await axios.post("http://localhost:3000/verifypayment", {
                     order_id: options.order_id,
                     payment_id: response.razorpay_payment_id
                 }, {
@@ -256,32 +299,31 @@ document.querySelector('.prime').onclick = async (e) => {
                     }
                 });
                 alert("done")
+                window.location.reload()
                 console.log("what is this yar")
 
             } catch (e) {
-                console.error('Payment verification error:', e); // Debug statement
+                console.error('Payment verification error:', e); 
                 alert("Something went wrong");
             }
         },
         "modal": {
             "ondismiss": function() {
-                console.log('Payment modal dismissed'); // Debug statement
+                console.log('Payment modal dismissed'); 
             }
         }
     };
 
-    // Initialize and open Razorpay
+   
 
 
     const rzp1 = new Razorpay(options);
    
      await rzp1.open();
      e.preventDefault()
-  //  window.location.reload()
-
-    // Handle payment failure
+  
     rzp1.on('payment.failed', function (response) {
-        console.log('Payment failed response:', response); // Debug statement
+        console.log('Payment failed response:', response); 
         alert('Payment failed. Please try again.');
     });
 };
@@ -325,6 +367,150 @@ document.getElementById('leader').onclick = function() {
 
     console.log("Button clicked");
 };
+
+
+document.querySelectorAll('.my-button').forEach(button => {
+    button.addEventListener('click', async(event) => {
+              
+        const buttonId = event.target.id;
+        
+        // Handle the button click
+        console.log(`Button clicked: ${buttonId}`);
+        // You can add more logic based on the button clicked
+        const ID= localStorage.getItem('token')
+        const table= document.getElementById('arrangetable')
+        table.style.display='block'
+        const tableBody = document.getElementById('arrangeTableBody');
+        tableBody.innerHTML = '';
+        const arrangeby=document.getElementById('arrangeby')
+        arrangeby.textContent=buttonId
+       
+        try{
+
+            fetch(`http://localhost:3000/arrange?token=${buttonId}`,{
+        headers:{
+            authorization:ID
+        }
+    }).then(()=>{
+        
+    })
+        }
+        catch(e){
+            console.log(e)
+        }
+    });
+});
+document.getElementById('download').addEventListener('click', async () => {
+    try {
+        console.log("download");
+        const ID = localStorage.getItem('token');
+
+        // Fetch the URL from the server
+        const response = await fetch('http://localhost:3000/download', {
+            headers: {
+                authorization: ID
+            }
+        });
+
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+
+        // Parse the JSON response
+        const data = await response.json();
+        console.log(data.fileUrl);
+        const urlbtn=document.getElementById('urllist')
+        urlbtn.style.display='block'
+
+        // Check if the fileUrl exists
+        if (data.fileUrl) {
+               // Create an anchor element
+            console.log("data.fileUrl",data.fileUrl)
+            const link = document.createElement('a');
+            link.href = data.fileUrl;
+         //   link.target = '_blank'; // Optional: open in a new tab
+            document.body.appendChild(link); // Append to body to make it part of the DOM
+           await  fetch('http://localhost:3000/urlList',{
+                headers:{
+                    Authorization:ID,
+                    FILEURL:data.fileUrl
+                }
+            })
+            // Simulate a click on the link
+            link.click();
+
+            // Remove the link from the DOM
+            document.body.removeChild(link);
+        } else {
+            console.error('File URL is not available.');
+        }
+    } catch (error) {
+        console.error('Error during download:', error);
+    }
+});
+document.getElementById("urllist").onclick = async () => {
+    
+            console.log("Fetching URLs...");
+            document.getElementById('urls').style.display='block'
+            const ID = localStorage.getItem('token');
+            console.log(ID);
+            
+            try {
+                const response = await fetch('http://localhost:3000/geturls', {
+                    headers: {
+                        Authorization: ID
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                const urls=data.url
+                console.log("List of URLs:", data);
+                
+                // Clear the existing table body
+                const tableBody = document.getElementById('listbody');
+                tableBody.innerHTML = '';
+
+                // Populate table with new data
+                urls.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    const idCell = document.createElement('td');
+                    idCell.textContent = item.id; // Assuming item has an 'id' property
+                    console.log("id",item.id)
+                    
+                    const urlCell = document.createElement('td');
+                    urlCell.textContent = item.url; // Assuming item has a 'url' property
+                    
+                    const actionCell = document.createElement('td');
+                    const anchor = document.createElement('a');
+                    anchor.href = item.url; // Assuming item has a 'url' property
+                    anchor.textContent = 'Download';
+                    anchor.target = '_blank'; // Open in new tab (optional)
+                    actionCell.appendChild(anchor);
+                    
+                    row.appendChild(idCell);
+                    row.appendChild(urlCell);
+                    row.appendChild(actionCell);
+                    
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching URLs:', error);
+            }
+        };
+   
+   //link.href=response.fileUrl
+   //link.click()
+   //document.body.appendChild(link)
+
+   
+
+
 
 
 </script>
