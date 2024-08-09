@@ -140,14 +140,29 @@ exports.postaddexpense = async (req, res, next) => {
           }*/
 exports.getData = async (req, res, next) => {
     try {
+        const pageno=Number(req.query.page)
+        const gap=Number(req.query.gap)
+        console.log("pageno is ",pageno)
+        console.log("gap is",gap)
+        const offset=(pageno-1)*gap
         const authorizationHeader = req.headers['authorization'];
         console.log("id",authorizationHeader)
        const id= await getidfromjwt(authorizationHeader)
        console.log(id)
 
-        const data = await expenses.findAll({where:{UserId:id}});
+        const data = await expenses.findAll({where:{UserId:id},
+        offset:offset,
+        limit:gap
+
+    }
+            
+        );
+        const totalItems = await expenses.count({ where: { UserId: id } });
+        const totalPages = Math.ceil(totalItems / gap);
+        console.log("to",totalPages)
         console.log(data)
-        res.json(data); 
+        res.json({data:data,totalpage:totalPages}); 
+
     } catch (e) {
         console.log(e);
        res.status(500).json({ error: 'Internal Server Error' });  

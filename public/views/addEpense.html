@@ -61,10 +61,13 @@
                 <tbody id="expenseTableBody">
                  
                 </tbody>
+                
             </table>
-            <button id="daily" class="my-button">TODAY EXPENSE</button>
+           <!-- <button id="daily" class="my-button">TODAY EXPENSE</button>
             <button id="week" class="my-button">WEEKLY EXPENSE</button>
-            <button id="month"class="my-button">MONTHLY EXPENSE</button>
+            <button id="month"class="my-button">MONTHLY EXPENSE</button>-->
+            <button id="prev">prev</button>
+            <button id="next">next</button>
           
         </div>
         <div class="container" id="totalexpenseTable" style=" display:none">
@@ -121,8 +124,11 @@
             </table>
         </div>
 <script>
+       let pagno=1
+       const gap=1
     window.onload = function() {
         const ID=localStorage.getItem('token')
+     
 
         console.log("load")
 
@@ -186,10 +192,11 @@ function addexpense() {
     console.log(error);
     });
 }
-function getData() {
+function getData(x=false) {
     const ID=localStorage.getItem('token')
+   
     
-    fetch('http://localhost:3000/getdata',{
+    fetch(`http://localhost:3000/getdata/?page=${pagno}&gap=${gap}`,{
         headers:{
             authorization:ID
         }
@@ -200,14 +207,14 @@ function getData() {
             }
             return response.json();
         })
-        .then(data => {
-            console.log("Received data:", data);
+        .then(d => {
+            console.log("Received data:", d);
 
             const tableBody = document.getElementById('expenseTableBody');
             tableBody.innerHTML = '';
 
             
-            data.forEach(item => {
+            d.data.forEach(item => {
                 const row = document.createElement('tr');
 
             
@@ -232,11 +239,29 @@ function getData() {
 
                 // Append the row to the table body
                 tableBody.appendChild(row);
+                console.log("pageno",pagno)
+                console.log(d.totalpage)
+                if(d.totalpage==pagno)
+            {
+                document.getElementById('next').style.display='none'
+            }
+            else{
+                document.getElementById('next').style.display='block'
+            }
+            if(pagno==1)
+            {
+                 document.getElementById('prev').style.display='none'
+            }
+            else{
+                 document.getElementById('prev').style.display='block'
+            }
             });
 
             // Show the table
            const show= document.getElementById('actionbtn')
-           if(show.innerText==='getdata')
+           if(x==false)
+           {
+            if(show.innerText==='getdata')
            {
             document.getElementById('expenseTable').style.display = 'block';
             show.innerText="hidedata"
@@ -247,6 +272,10 @@ function getData() {
             show.innerText="getdata"
 
            }
+           }
+          
+          
+        
 
             
         })
@@ -508,7 +537,20 @@ document.getElementById("urllist").onclick = async () => {
    //link.click()
    //document.body.appendChild(link)
 
-   
+   document.getElementById('next').addEventListener('click',function(){
+    pagno++
+
+    console.log(pagno)
+    getData(true)
+   })
+   document.getElementById("prev").addEventListener('click',function()
+{
+    pagno--
+    console.log(pagno)
+    
+    
+    getData(true)
+})
 
 
 
